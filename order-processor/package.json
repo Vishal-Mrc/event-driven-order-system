@@ -1,0 +1,23 @@
+{
+  "name": "order-processor",
+  "version": "1.0.0",
+  "description": "Pub/Sub order processor for the event-driven order system",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "pubsub",
+    "firestore",
+    "cloud-run"
+  ],
+  "author": "Vishal Moothoo",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@google-cloud/firestore": "^9.0.0",
+    "express": "^5.2.1"
+  }
+}

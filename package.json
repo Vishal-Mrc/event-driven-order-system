@@ -1,0 +1,25 @@
+{
+  "name": "event-driven-order-system",
+  "version": "1.0.0",
+  "description": "Event-driven order processing system using Google Cloud",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "google-cloud",
+    "pubsub",
+    "firestore",
+    "cloud-run"
+  ],
+  "author": "Vishal Moothoo",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@google-cloud/firestore": "^9.0.0",
+    "@google-cloud/pubsub": "^6.0.1",
+    "express": "^5.2.1"
+  }
+}
