@@ -1,0 +1,105 @@
+name: Deploy Event-Driven Order System
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: gcptraining2121ttt
+  REGION: us-central1
+
+  ORDER_API_SERVICE: task-management-api
+  ORDER_API_IMAGE: us-central1-docker.pkg.dev/gcptraining2121ttt/task-api-repo/task-management-api
+
+  PROCESSOR_SERVICE: order-processor
+  PROCESSOR_IMAGE: us-central1-docker.pkg.dev/gcptraining2121ttt/order-processor-repo/order-processor
+
+  ORDER_API_RUNTIME: task-api-runtime@gcptraining2121ttt.iam.gserviceaccount.com
+  PROCESSOR_RUNTIME: order-processor-runtime@gcptraining2121ttt.iam.gserviceaccount.com
+
+jobs:
+
+  deploy-order-api:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/783181616350/locations/global/workloadIdentityPools/github-pool/providers/event-driven-provider
+          service_account: github-actions-deployer@gcptraining2121ttt.iam.gserviceaccount.com
+
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build Order API image
+        run: |
+          docker build \
+            -t $ORDER_API_IMAGE:${{ github.sha }} \
+            .
+
+      - name: Push Order API image
+        run: |
+          docker push $ORDER_API_IMAGE:${{ github.sha }}
+
+      - name: Deploy Order API
+        run: |
+          gcloud run deploy $ORDER_API_SERVICE \
+            --image=$ORDER_API_IMAGE:${{ github.sha }} \
+            --region=$REGION \
+            --platform=managed \
+            --allow-unauthenticated \
+            --service-account=$ORDER_API_RUNTIME
+
+
+  deploy-order-processor:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/783181616350/locations/global/workloadIdentityPools/github-pool/providers/event-driven-provider
+          service_account: github-actions-deployer@gcptraining2121ttt.iam.gserviceaccount.com
+
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build Order Processor image
+        working-directory: order-processor
+        run: |
+          docker build \
+            -t $PROCESSOR_IMAGE:${{ github.sha }} \
+            .
+
+      - name: Push Order Processor image
+        run: |
+          docker push $PROCESSOR_IMAGE:${{ github.sha }}
+
+      - name: Deploy Order Processor
+        run: |
+          gcloud run deploy $PROCESSOR_SERVICE \
+            --image=$PROCESSOR_IMAGE:${{ github.sha }} \
+            --region=$REGION \
+            --platform=managed \
+            --no-allow-unauthenticated \
+            --service-account=$PROCESSOR_RUNTIME
